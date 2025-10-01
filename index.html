@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo App 2025</title>
+    <style>
+        :root {
+            --background-color: #121212;
+            --surface-color: #1e1e1e;
+            --primary-color: #bb86fc;
+            --primary-variant-color: #3700b3;
+            --text-color: #e1e1e1;
+            --text-secondary-color: #b3b3b3;
+            --border-color: #2c2c2c;
+            --success-color: #03dac6;
+            --error-color: #cf6679;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 2rem 1rem;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 600px;
+            background-color: var(--surface-color);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            padding: 2rem;
+        }
+
+        header h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            color: var(--primary-color);
+        }
+
+        #taskForm {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+        }
+
+        #taskTitleInput {
+            flex-grow: 1;
+            background-color: #2c2c2c;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            color: var(--text-color);
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        #taskTitleInput:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        #taskForm button {
+            background-color: var(--primary-color);
+            border: none;
+            color: #121212;
+            font-weight: bold;
+            padding: 0 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s;
+        }
+
+        #taskForm button:hover {
+            background-color: #a365f7;
+        }
+        
+        #taskForm button:active {
+            transform: scale(0.98);
+        }
+
+        #taskList {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            background-color: #2c2c2c;
+            border-radius: 8px;
+            transition: background-color 0.3s;
+        }
+
+        .task-item.completed .task-title {
+            text-decoration: line-through;
+            color: var(--text-secondary-color);
+        }
+        
+        .task-title {
+            flex-grow: 1;
+            cursor: pointer;
+            padding: 0 0.5rem;
+        }
+        
+        .task-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .task-actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.25rem;
+        }
+
+        .task-actions svg {
+            width: 20px;
+            height: 20px;
+            transition: transform 0.2s;
+        }
+
+        .task-actions button:hover svg {
+            transform: scale(1.2);
+        }
+
+        .toggle-btn svg { fill: var(--text-secondary-color); }
+        .task-item.completed .toggle-btn svg { fill: var(--success-color); }
+        .delete-btn svg { fill: var(--error-color); }
+
+    </style>
+</head>
+<body>
+
+    <main class="app-container">
+        <header>
+            <h1>Minhas Tarefas</h1>
+        </header>
+
+        <form id="taskForm">
+            <input type="text" id="taskTitleInput" placeholder="O que precisa ser feito?" required>
+            <button type="submit">Adicionar</button>
+        </form>
+
+        <ul id="taskList">
+            <!-- As tarefas serão renderizadas aqui pelo JavaScript -->
+        </ul>
+    </main>
+
+    <script>
+        const apiUrl = '/tasks';
+        const taskForm = document.getElementById('taskForm');
+        const taskTitleInput = document.getElementById('taskTitleInput');
+        const taskList = document.getElementById('taskList');
+
+        /**
+         * Renderiza as tarefas na UI
+         */
+        function renderTasks(tasks) {
+            taskList.innerHTML = '';
+            tasks.forEach(task => {
+                const li = document.createElement('li');
+                li.className = `task-item ${task.completed ? 'completed' : ''}`;
+                li.dataset.id = task.id;
+                li.dataset.title = task.title;
+                li.dataset.completed = task.completed;
+
+                li.innerHTML = `
+                    <span class="task-title">${task.title}</span>
+                    <div class="task-actions">
+                        <button class="toggle-btn" aria-label="Completar tarefa">
+                            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                        </button>
+                        <button class="delete-btn" aria-label="Apagar tarefa">
+                            <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                        </button>
+                    </div>
+                `;
+                taskList.appendChild(li);
+            });
+        }
+
+        /**
+         * Busca todas as tarefas da API e as renderiza
+         */
+        async function fetchAndDisplayTasks() {
+            try {
+                const response = await fetch(apiUrl);
+                if (!response.ok) throw new Error('Falha ao buscar tarefas');
+                const tasks = await response.json();
+                renderTasks(tasks);
+            } catch (error) {
+                console.error('Erro:', error);
+                taskList.innerHTML = '<li class="task-item">Não foi possível carregar as tarefas.</li>';
+            }
+        }
+
+        /**
+         * Lida com a submissão do formulário para criar uma nova tarefa
+         */
+        taskForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const title = taskTitleInput.value.trim();
+            if (!title) return;
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title: title, completed: false }),
+                });
+
+                if (response.ok) {
+                    taskTitleInput.value = '';
+                    await fetchAndDisplayTasks();
+                } else {
+                    const errorData = await response.json();
+                    alert(`Erro: ${errorData.message}`);
+                }
+            } catch (error) {
+                console.error('Erro ao adicionar tarefa:', error);
+            }
+        });
+
+        /**
+         * Lida com cliques na lista de tarefas para apagar, completar ou editar
+         */
+        taskList.addEventListener('click', async (event) => {
+            const target = event.target;
+            const li = target.closest('.task-item');
+            if (!li) return;
+
+            const taskId = li.dataset.id;
+
+            // Botão de Apagar
+            if (target.closest('.delete-btn')) {
+                if (confirm('Tem a certeza que quer apagar esta tarefa?')) {
+                    try {
+                        await fetch(`${apiUrl}/${taskId}`, { method: 'DELETE' });
+                        li.remove(); // Remove da UI para feedback imediato
+                    } catch (error) {
+                        console.error('Erro ao apagar tarefa:', error);
+                        alert('Não foi possível apagar a tarefa.');
+                    }
+                }
+            }
+
+            // Botão de Completar/Incompletar
+            if (target.closest('.toggle-btn')) {
+                const isCompleted = li.dataset.completed === 'true';
+                try {
+                    await fetch(`${apiUrl}/${taskId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ completed: !isCompleted }),
+                    });
+                    await fetchAndDisplayTasks(); // Re-renderiza para garantir consistência
+                } catch (error) {
+                    console.error('Erro ao atualizar status:', error);
+                }
+            }
+
+            // Editar Título
+            if (target.classList.contains('task-title')) {
+                const originalTitle = li.dataset.title;
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = originalTitle;
+                input.className = 'task-title-edit'; // Pode adicionar estilos para isto se quiser
+
+                target.replaceWith(input);
+                input.focus();
+
+                const saveChanges = async () => {
+                    const newTitle = input.value.trim();
+                    if (newTitle && newTitle !== originalTitle) {
+                         try {
+                            await fetch(`${apiUrl}/${taskId}`, {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ title: newTitle }),
+                            });
+                        } catch(error) {
+                            console.error("Erro ao editar o título:", error)
+                        }
+                    }
+                    await fetchAndDisplayTasks(); // Sempre re-renderiza para voltar ao estado normal
+                };
+
+                input.addEventListener('blur', saveChanges);
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') saveChanges();
+                    if (e.key === 'Escape') fetchAndDisplayTasks(); // Cancela e re-renderiza
+                });
+            }
+        });
+
+        // Carregamento inicial
+        fetchAndDisplayTasks();
+    </script>
+</body>
+</html>
