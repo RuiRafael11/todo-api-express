@@ -74,7 +74,16 @@ app.put('/tasks/:id', (req, res) => {
     task.title = title;
   }
 
+  // Lógica para a data de conclusão
   if (completed !== undefined) {
+    // Se a tarefa está a ser marcada como concluída (e não estava antes)
+    if (completed === true && task.completed === false) {
+      task.completedAt = new Date().toISOString();
+    }
+    // Se a tarefa está a ser desmarcada como concluída
+    else if (completed === false) {
+      task.completedAt = null; // ou delete task.completedAt;
+    }
     task.completed = completed;
   }
 
